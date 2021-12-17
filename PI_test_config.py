@@ -28,7 +28,7 @@ SecureKey = "NoKey"
 
 #mcu version
 latest_mcu_version = 1000
-ver_app            = "6.5.0-a"  # 6.x.x-a for NTU project(add dB sensor) / v6.4.1 fix handling "inf" problem
+ver_app            = "6.5.0-S"  # 6.x.x-a for NTU project(add dB sensor) / v6.4.1 fix handling "inf" problem / v6.5.0 LJ special
 
 
 #path
