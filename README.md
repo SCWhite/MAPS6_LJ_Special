@@ -1,1 +1,1 @@
-# MAPS6_LJ_Special
+# MAPS6_NTU_Special
