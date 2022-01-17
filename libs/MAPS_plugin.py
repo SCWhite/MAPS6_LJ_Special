@@ -7,30 +7,34 @@ import threading
 import traceback
 from datetime import datetime
 from collections import deque
-from statistics import median
+from statistics import mean
 
 MIC_COM_PORT = '/dev/ttyACM0'
 BAUD_RATES = 115200
 
 #pairs = datetime.now().strftime("%Y-%m-%d %H-%M").split(" ")
 
-slot_count = 0
-slot_energy = 0
-Leq = 0
-Leq_Max = 0
-Leq_Min = 0
-Leq_Median = 0
+#slot_count = 0
+#slot_energy = 0
+#Leq = 0
+#Leq_Max = 0
+#Leq_Min = 0
+#Leq_Median = 0
 
-min_leq = 0
+Score_Max = 0
+Score_Min = 0
+Score_Avg = 0
 
-all_slot_energy = 0
-all_slot_count  = 0
+#min_leq = 0
+
+#all_slot_energy = 0
+#all_slot_count  = 0
 
 temp_list = []
 
 #notice: we use a sliding windows to calculate Max/Min/Mid
 # one goes in, one come out
-dba_windows = deque(maxlen=1)
+#dba_windows = deque(maxlen=1)
 
 
 """
@@ -59,9 +63,10 @@ def transfer_to_eng(x):
 
 def get_dba_data():
 
-    global slot_count, slot_energy, Leq
-    global Leq_Max, Leq_Min, Leq_Median, dba_windows
-    global all_slot_energy, all_slot_count, min_leq
+    #global slot_count, slot_energy, Leq
+    #global Leq_Max, Leq_Min, Leq_Median, dba_windows
+    #global all_slot_energy, all_slot_count, min_leq
+    global Score_Max, Score_Min, Score_Avg
 
     while True:
         #ser = serial.Serial(MIC_COM_PORT, BAUD_RATES)
@@ -76,50 +81,52 @@ def get_dba_data():
                 if(time_stamp == last_time_stamp):
                     while ser.in_waiting:
 
+                        #BUS_score:0.00,0.01,-0.01,64.51,1
                         data_raw = ser.readline()
                         data = data_raw.decode()
 
-                        data_set = data.strip().split(" ")
+                        data_set = data.strip().split(":")
+                        data_set = data_set.split(",")
 
                         #add list for calc Max/min
-                        temp_list.append(float(data_set[1]))
+                        temp_list.append(float(data_set[4]))
 
                         #caculate dba to energy
-                        slot_energy =  slot_energy + transfer_to_eng(float(data_set[1]))
+                        #slot_energy =  slot_energy + transfer_to_eng(float(data_set[1]))
 
                         #print(time_stamp +": "+data_set[1])
-                        slot_count = slot_count + 1
+                        #slot_count = slot_count + 1
 
                 else:
                     #transfer back to dba / Leq in 1 seconds
                     #Leq = math.log10(math.sqrt(slot_energy / slot_count)) * 10
-                    Leq = math.log10(slot_energy / slot_count) * 10
+                    #Leq = math.log10(slot_energy / slot_count) * 10
 
                     #limited to 2 places
-                    Leq = round(Leq,2)
-                    dba_windows.append(Leq)
+                    #Leq = round(Leq,2)
+                    #dba_windows.append(Leq)
 
                     #this part is for calculate minute Leq
                     #adds up every Leq in the moving windows
-                    for i in range(len(dba_windows)):
-                        #print("choose slot:" + str(dba_windows[i]))
-                        all_slot_energy = all_slot_energy + transfer_to_eng(dba_windows[i])
-                        all_slot_count = len(dba_windows)
+                    #for i in range(len(dba_windows)):
+                    #    #print("choose slot:" + str(dba_windows[i]))
+                    #    all_slot_energy = all_slot_energy + transfer_to_eng(dba_windows[i])
+                    #    all_slot_count = len(dba_windows)
                     #print("all energy:" + str(all_slot_energy))
                     #print("all count :" + str(all_slot_count))
                     #print("this is list:")
                     #print(dba_windows)
 
-                    min_leq = math.log10(all_slot_energy / all_slot_count) * 10
-                    min_leq = round(min_leq,2)
+                    #min_leq = math.log10(all_slot_energy / all_slot_count) * 10
+                    #min_leq = round(min_leq,2)
 
                     #use temp_list for Max/min
                     #Leq_Max = max(dba_windows)
                     #Leq_Min = min(dba_windows)
                     #Leq_Median = round(median(dba_windows),2)
-                    Leq_Max = max(temp_list)
-                    Leq_Min = min(temp_list)
-                    Leq_Median = round(median(temp_list),2)
+                    Score_Max = max(temp_list)
+                    Score_Min = min(temp_list)
+                    Score_Avg = round(mean(temp_list),2)
 
 
                     #print("Leq: " + str(Leq) + "\n")
@@ -131,10 +138,10 @@ def get_dba_data():
                     #print("min_leq: " + str(min_leq) + "\n")
                     #print("------------------")
 
-                    slot_energy = 0
-                    slot_count  = 0
-                    all_slot_energy = 0
-                    all_slot_count  = 0
+                    #slot_energy = 0
+                    #slot_count  = 0
+                    #all_slot_energy = 0
+                    #all_slot_count  = 0
                     temp_list.clear()
                     last_time_stamp = time_stamp
 
@@ -143,12 +150,16 @@ def get_dba_data():
             ser.close()
 
             #clear remain data
-            dba_windows.clear()
-            Leq = 0
-            Leq_Max = 0
-            Leq_Min = 0
-            Leq_Median = 0
-            min_leq = 0
+            #dba_windows.clear()
+            #Leq = 0
+            #Leq_Max = 0
+            #Leq_Min = 0
+            #Leq_Median = 0
+            #min_leq = 0
+
+            Score_Max = 0
+            Score_Min = 0
+            Score_Avg = 0
 
             time.sleep(5)
             print('no MIC or port error!\n')

@@ -34,10 +34,16 @@ PM25_AE         = 0
 PM10_AE         = 0
 connection_flag = ""
 #for dB sensor
-Leq         = 0
-Leq_Max     = 0
-Leq_Min     = 0
-Leq_Median  = 0
+#Leq         = 0
+#Leq_Max     = 0
+#Leq_Min     = 0
+#Leq_Median  = 0
+
+#for bus score
+Score_Max = 0
+Score_Min = 0
+Score_Avg = 0
+
 
 #location data
 gps_lat = ""
@@ -65,8 +71,8 @@ def upload_task():
 
         msg = msg + "|s_t0=" + str(TEMP) + "|app=" + str(Conf.APP_ID) + "|date=" + pairs[0] + "|s_d0=" + str(PM25_AE) + "|s_h0=" + str(HUM) + "|device_id=" + Conf.DEVICE_ID + "|s_gg=" + str(TVOC) + "|ver_app=" + str(Conf.ver_app) + "|time=" + pairs[1]
 
-        if((Leq != 0)and(Leq != float("inf"))):
-            msg = msg + "|s_s0=" + str(Leq_Median) + "|s_s0M=" + str(Leq_Max) + "|s_s0m=" + str(Leq_Min) + "|s_s0L=" + str(Leq)
+        if((Score_Avg != 0)and(Score_Avg != float("inf"))):
+            msg = msg + "|bus_s0=" + str(Score_Avg) + "|bus_s0M=" + str(Score_Max) + "|bus_s0m=" + str(Score_Min)
 
         print("message ready")
         restful_str = Conf.Restful_URL + "topic=" + Conf.APP_ID + "&device_id=" + Conf.DEVICE_ID + "&key=" + Conf.SecureKey + "&msg=" + msg
@@ -78,7 +84,7 @@ def upload_task():
         except:
             print("internet err!!")
         #save after upload / makesure data will be synchronize
-        format_data_list = [Conf.DEVICE_ID,pairs[0],pairs[1],TEMP,HUM,PM25_AE,PM1_AE,PM10_AE,Illuminance,CO2,TVOC,Leq,Leq_Max,Leq_Min,Leq_Median,gps_lat,gps_lon]
+        format_data_list = [Conf.DEVICE_ID,pairs[0],pairs[1],TEMP,HUM,PM25_AE,PM1_AE,PM10_AE,Illuminance,CO2,TVOC,Score_Avg,Score_Max,Score_Min,gps_lat,gps_lon]
         try:
             pi.save_data(path,format_data_list) #save to host
             pi.save_to_SD(format_data_list)     #save to SD card
@@ -92,7 +98,7 @@ def save_task():
         time.sleep(Conf.save_interval) #60 seconds
         #format to ['device_id', 'date', 'time', 'Tmp',  'RH',   'PM2.5','PM10', 'PM1.0','Lux',  'CO2',  'TVOC' ,'Leq','Leq_Max','Leq_Min','Leq_Median','gps_lat','gps_lon']
         pairs = datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S").split(" ")
-        format_data_list = [Conf.DEVICE_ID,pairs[0],pairs[1],TEMP,HUM,PM25_AE,PM1_AE,PM10_AE,Illuminance,CO2,TVOC,Leq,Leq_Max,Leq_Min,Leq_Median,gps_lat,gps_lon]
+        format_data_list = [Conf.DEVICE_ID,pairs[0],pairs[1],TEMP,HUM,PM25_AE,PM1_AE,PM10_AE,Illuminance,CO2,TVOC,Score_Avg,Score_Max,Score_Min,gps_lat,gps_lon]
         try:
             pi.save_data(path,format_data_list) #save to host
             pi.save_to_SD(format_data_list)     #save to SD card
@@ -201,8 +207,8 @@ def nbiot_sending_task():
 
             msg = msg + "|s_t0=" + str(TEMP) + "|app=" + str(Conf.APP_ID) + "|date=" + pairs[0] + "|s_d0=" + str(PM25_AE) + "|s_h0=" + str(HUM) + "|device_id=" + Conf.DEVICE_ID + "|s_gg=" + str(TVOC) + "|ver_app=" + str(Conf.ver_app) + "|time=" + pairs[1] 
 
-            if((Leq != 0)and(Leq != float("inf"))):
-                msg = msg + "|s_s0=" + str(Leq_Median) + "|s_s0M=" + str(Leq_Max) + "|s_s0m=" + str(Leq_Min) + "|s_s0L=" + str(Leq)
+            if((Score_Avg != 0)and(Score_Avg != float("inf"))):
+                msg = msg + "|bus_s0=" + str(Score_Avg) + "|bus_s0M=" + str(Score_Max) + "|bus_s0m=" + str(Score_Min)
 
             msg = msg + "|MQ"
 
@@ -615,11 +621,16 @@ try:
 
         #for dB sensor
         #Leq         = plugin.Leq
-        Leq         = plugin.min_leq
-        Leq_Max     = plugin.Leq_Max
-        Leq_Min     = plugin.Leq_Min
-        Leq_Median  = plugin.Leq_Median
+        #Leq         = plugin.min_leq
+        #Leq_Max     = plugin.Leq_Max
+        #Leq_Min     = plugin.Leq_Min
+        #Leq_Median  = plugin.Leq_Median
         #
+
+        #for Bus_score
+        Score_Max = plugin.Score_Max
+        Score_Min = plugin.Score_Min
+        Score_Avg = plugin.Score_Avg
 
         if(stop_query_sensor == 0):
             print("TEMP:"         + str(TEMP))
@@ -630,10 +641,9 @@ try:
             print("PM1_AE:"       + str(PM1_AE))
             print("PM25_AE:"      + str(PM25_AE))
             print("PM10_AE:"      + str(PM10_AE))
-            print("Leq:"          + str(Leq))
-            print("Leq_Max:"      + str(Leq_Max))
-            print("Leq_Min:"      + str(Leq_Min))
-            print("Leq_Median:"   + str(Leq_Median))
+            print("Score_Max:"    + str(Score_Max))
+            print("Score_Min:"    + str(Score_Min))
+            print("Score_Avg:"    + str(Score_Avg))
             print("------------------------")
 
         loop = loop + 1
